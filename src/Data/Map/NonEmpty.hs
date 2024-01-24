@@ -253,6 +253,7 @@ module Data.Map.NonEmpty (
   , valid
   ) where
 
+import GHC.Stack
 import           Control.Applicative
 import           Data.Bifunctor
 import           Data.Function
@@ -995,7 +996,7 @@ fromListWithKey f ((k0, v0) :| xs) = F.foldl' go (singleton k0 v0) xs
 -- > valid (fromAscList ((3,"b") :| [(5,"a"), (5,"b")])) == True
 -- > valid (fromAscList ((5,"a") :| [(3,"b"), (5,"b")])) == False
 fromAscList
-    :: Eq k
+    :: Ord k => HasCallStack
     => NonEmpty (k, a)
     -> NEMap k a
 fromAscList = fromDistinctAscList . combineEq
@@ -1009,7 +1010,7 @@ fromAscList = fromDistinctAscList . combineEq
 -- > valid (fromAscListWith (++) ((3,"b") :| [(5,"a"), (5,"b"))]) == True
 -- > valid (fromAscListWith (++) ((5,"a") :| [(3,"b"), (5,"b"))]) == False
 fromAscListWith
-    :: Eq k
+    :: Ord k => HasCallStack
     => (a -> a -> a)
     -> NonEmpty (k, a)
     -> NEMap k a
@@ -1025,7 +1026,7 @@ fromAscListWith f = fromAscListWithKey (const f)
 -- > valid (fromAscListWithKey f ((3,"b") :| [(5,"a"), (5,"b"), (5,"b")])) == True
 -- > valid (fromAscListWithKey f ((5,"a") :| [(3,"b"), (5,"b"), (5,"b")])) == False
 fromAscListWithKey
-    :: Eq k
+    :: Ord k => HasCallStack
     => (k -> a -> a -> a)
     -> NonEmpty (k, a)
     -> NEMap k a
@@ -1038,7 +1039,7 @@ fromAscListWithKey f = fromDistinctAscList . combineEqWith f
 -- > fromDistinctAscList ((3,"b") :| [(5,"a")]) == fromList ((3, "b") :| [(5, "a")])
 -- > valid (fromDistinctAscList ((3,"b") :| [(5,"a")]))          == True
 -- > valid (fromDistinctAscList ((3,"b") :| [(5,"a"), (5,"b")])) == False
-fromDistinctAscList :: NonEmpty (k, a) -> NEMap k a
+fromDistinctAscList :: HasCallStack =>  Ord k => NonEmpty (k, a) -> NEMap k a
 fromDistinctAscList ((k, v) :| xs) = insertMapMin k v
                                    . M.fromDistinctAscList
                                    $ xs
@@ -1052,7 +1053,7 @@ fromDistinctAscList ((k, v) :| xs) = insertMapMin k v
 -- > valid (fromDescList ((5,"a") :| [(5,"b"), (3,"b")])) == True
 -- > valid (fromDescList ((5,"a") :| [(3,"b"), (5,"b")])) == False
 fromDescList
-    :: Eq k
+    :: Ord k => HasCallStack
     => NonEmpty (k, a)
     -> NEMap k a
 fromDescList = fromDistinctDescList . combineEq
@@ -1066,7 +1067,7 @@ fromDescList = fromDistinctDescList . combineEq
 -- > valid (fromDescListWith (++) ((5,"a") :| [(5,"b"), (3,"b")])) == True
 -- > valid (fromDescListWith (++) ((5,"a") :| [(3,"b"), (5,"b")])) == False
 fromDescListWith
-    :: Eq k
+    :: Ord k => HasCallStack
     => (a -> a -> a)
     -> NonEmpty (k, a)
     -> NEMap k a
@@ -1082,7 +1083,7 @@ fromDescListWith f = fromDescListWithKey (const f)
 -- > valid (fromDescListWithKey f ((5,"a") :| [(5,"b"), (5,"b"), (3,"b")])) == True
 -- > valid (fromDescListWithKey f ((5,"a") :| [(3,"b"), (5,"b"), (5,"b")])) == False
 fromDescListWithKey
-    :: Eq k
+    :: Ord k => HasCallStack
     => (k -> a -> a -> a)
     -> NonEmpty (k, a)
     -> NEMap k a
@@ -1097,7 +1098,7 @@ fromDescListWithKey f = fromDistinctDescList . combineEqWith f
 -- > valid (fromDistinctDescList ((5,"a") :| [(5,"b"), (3,"b")])) == False
 --
 -- @since 0.5.8
-fromDistinctDescList :: NonEmpty (k, a) -> NEMap k a
+fromDistinctDescList :: HasCallStack => Ord k => NonEmpty (k, a) -> NEMap k a
 fromDistinctDescList ((k, v) :| xs) = insertMapMax k v
                                     . M.fromDistinctDescList
                                     $ xs
@@ -1538,7 +1539,7 @@ mapKeysWith c f (NEMap k0 v0 m) = fromListWith c
 -- > valid (mapKeysMonotonic (\ k -> k * 2) (fromList ((5,"a") :| [(3,"b")]))) == True
 -- > valid (mapKeysMonotonic (\ _ -> 1)     (fromList ((5,"a") :| [(3,"b")]))) == False
 mapKeysMonotonic
-    :: (k1 -> k2)
+    :: HasCallStack => Ord k2 => (k1 -> k2)
     -> NEMap k1 a
     -> NEMap k2 a
 mapKeysMonotonic f (NEMap k v m) = NEMap (f k) v
